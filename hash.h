@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #endif
 
-// Define hash function type.
+// Typ funkcji hashującej.
 typedef uint64_t (*hash_function_t) (uint64_t const *, size_t);
 
 #ifdef __cplusplus
