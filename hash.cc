@@ -32,8 +32,8 @@ namespace {
     using hash_tables_map_t = std::unordered_map<unsigned long, hash_table_t>;
 
     hash_tables_map_t & hash_tables_map() {
-        static hash_tables_map_t * helper = new hash_tables_map_t();
-        return * helper;
+        static hash_tables_map_t *helper = new hash_tables_map_t();
+        return *helper;
     }
 
     unsigned long & next_id() {
@@ -123,6 +123,9 @@ namespace {
         if (func_name == "hash_delete") {
             std::cerr << " deleted\n";
         }
+        else if (func_name == "hash_create") {
+            std::cerr << " created\n";
+        }
         else if (func_name == "hash_clear") {
             if (valid) {
                 std::cerr << " cleared\n";
@@ -176,10 +179,6 @@ namespace {
         std::cerr << "hash_size: hash table #" << id <<
         " contains " << size << " element(s)\n";
     }
-
-    void print_table_created(const unsigned long id) {
-        if (debug) std::cerr << "hash_create: hash table #" << id << " created\n";
-    }
 }
 
 namespace jnp1 {
@@ -196,11 +195,11 @@ namespace jnp1 {
             return 0;
         }
         else {
-            hash_tables_map_t &globalMap = hash_tables_map();
-            // unsigned long table_id = get_next_id();
+            hash_tables_map_t &global_map = hash_tables_map();
             hash_table_t new_hash_table(0, hasher(hash_function));
-            globalMap.emplace(std::make_pair(get_next_id(), new_hash_table));
-            print_table_created(next_id());
+
+            global_map.emplace(std::make_pair(get_next_id(), new_hash_table));
+            print_action(__func__, id, true);
             return next_id();
         }
     }
@@ -208,34 +207,33 @@ namespace jnp1 {
     // Usuwa tablicę haszującą o identyfikatorze id, o ile ona istnieje.
     // W przeciwnym przypadku nic nie robi.
     void hash_delete(unsigned long id) {
-        hash_tables_map_t &globalMap = hash_tables_map();
+        hash_tables_map_t &global_map = hash_tables_map();
         if (debug) {
             print_func_name_args(__func__, id, 0, NULL, NULL);
 
-            auto iter = globalMap.find(id);
-            if (iter == globalMap.end()) {
+            auto iter = global_map.find(id);
+            if (iter == global_map.end()) {
                 print_no_such_table(__func__, id);
             }
             else {
-                globalMap.erase(id);
+                global_map.erase(id);
                 print_action(__func__, id, true);
             }
         }
         else {
-            globalMap.erase(id);
+            global_map.erase(id);
         }
     }
 
     // Daje liczbę ciągów przechowywanych w tablicy haszującej
     // o identyfikatorze id lub 0, jeśli taka tablica nie istnieje.
     size_t hash_size(unsigned long id) {
-        hash_tables_map_t &globalMap = hash_tables_map();
-
         print_func_name_args(__func__, id, 0, NULL, NULL);
 
         size_t res;
-        auto iter = globalMap.find(id);
-        if (iter == globalMap.end()) {
+        hash_tables_map_t &global_map = hash_tables_map();
+        auto iter = global_map.find(id);
+        if (iter == global_map.end()) {
             res = 0;
             print_no_such_table(__func__, id);
         }
@@ -257,10 +255,10 @@ namespace jnp1 {
 
         bool res = true;
         if (seq != NULL && size > 0) {
-            hash_tables_map_t &globalMap = hash_tables_map();
+            hash_tables_map_t &global_map = hash_tables_map();
 
-            auto iter_table = globalMap.find(id);
-            if (iter_table == globalMap.end()) {
+            auto iter_table = global_map.find(id);
+            if (iter_table == global_map.end()) {
                 print_no_such_table(__func__, id);
                 res = false;
             }
@@ -283,7 +281,6 @@ namespace jnp1 {
         }
         
         print_invalid_ptr_size(__func__, (seq == NULL), (size == 0));
-
         return res;
     }
 
@@ -297,9 +294,9 @@ namespace jnp1 {
 
         bool res = true;
         if (seq != NULL && size > 0) {
-            hash_tables_map_t &globalMap = hash_tables_map();
-            auto iter_table = globalMap.find(id);
-            if (iter_table == globalMap.end()) {
+            hash_tables_map_t &global_map = hash_tables_map();
+            auto iter_table = global_map.find(id);
+            if (iter_table == global_map.end()) {
                 print_no_such_table(__func__, id);
                 res = false;
             }
@@ -319,7 +316,6 @@ namespace jnp1 {
         }
         
         print_invalid_ptr_size(__func__, (seq == NULL), (size == 0));
-
         return res;
     }
 
@@ -327,9 +323,10 @@ namespace jnp1 {
     // to usuwa z niej wszystkie elementy. W przeciwnym przypadku nic nie robi.
     void hash_clear(unsigned long id) {
         print_func_name_args(__func__, id, 0, NULL, NULL);
-        hash_tables_map_t &globalMap = hash_tables_map();
-        auto iter_table = globalMap.find(id);
-        if (iter_table != globalMap.end()) {
+
+        hash_tables_map_t &global_map = hash_tables_map();
+        auto iter_table = global_map.find(id);
+        if (iter_table != global_map.end()) {
             // Tablica istnieje - sprawdzenie rozmiaru.
             if (iter_table->second.size() > 0) {
                 iter_table->second.clear();
@@ -353,9 +350,9 @@ namespace jnp1 {
 
         bool res = true;
         if (seq != NULL && size > 0) {
-            hash_tables_map_t &globalMap = hash_tables_map();
-            auto iter_table = globalMap.find(id);
-            if (iter_table != globalMap.end()) {
+            hash_tables_map_t &global_map = hash_tables_map();
+            auto iter_table = global_map.find(id);
+            if (iter_table != global_map.end()) {
                 seq_t sequence(seq, seq + size);
                 auto iter_sequence = iter_table->second.find(sequence);
                 if (iter_sequence == iter_table->second.end()) {
